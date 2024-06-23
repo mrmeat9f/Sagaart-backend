@@ -170,6 +170,16 @@ class Subscribe(models.Model):
         related_name='user_subscribe',
         verbose_name='Подписка пользователя',
     )
+    status = models.BooleanField(
+        default=False,
+    )
+    start_date = models.DateTimeField(
+        auto_now=True,
+        verbose_name='Дата начала подписки',
+    )
+    end_date = models.DateTimeField(
+        verbose_name='Дата окончания подписки'
+    )
 
 
 class ShoppingList(models.Model):
