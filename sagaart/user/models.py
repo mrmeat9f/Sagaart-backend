@@ -9,6 +9,7 @@ from ..sagaart.values import (
 
 
 class User(AbstractUser):
+    """"Модель пользователя"""
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = [
         'id',
@@ -39,6 +40,7 @@ class User(AbstractUser):
     )
     phone = models.CharField(
         'Номер телефона',
+        unique=True,
         max_length=MAX_LENGTH_USER
     )
     icon = models.ImageField(
@@ -127,6 +129,7 @@ class User(AbstractUser):
 
 
 class SocialNets(models.Model):
+    """"Социальные сети пользователя"""
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -141,8 +144,16 @@ class SocialNets(models.Model):
         'Ссылка на социальную сеть'
     )
 
+    class Meta:
+        verbose_name = 'Социальная сеть'
+        verbose_name_plural = 'Социальные сети'
+
+    def __str__(self):
+        return f'{self.user.first_name} - {self.account}'
+
 
 class Education(models.Model):
+    """Образование пользователя"""
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -162,8 +173,16 @@ class Education(models.Model):
         max_length=MAX_LENGTH_USER
     )
 
+    class Meta:
+        verbose_name = 'Образвание'
+        verbose_name_plural = 'Образвание'
+
+    def __str__(self):
+        return f'{self.user.first_name} - {self.ed_type}'
+
 
 class Subscribe(models.Model):
+    """Подписка"""
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -181,8 +200,16 @@ class Subscribe(models.Model):
         verbose_name='Дата окончания подписки'
     )
 
+    class Meta:
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+
+    def __str__(self):
+        return f'{self.user.first_name} - {self.status}'
+
 
 class ShoppingList(models.Model):
+    """Корзина"""
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -195,3 +222,16 @@ class ShoppingList(models.Model):
         related_name='shopping_cart',
         verbose_name='Товар в корзине',
     )
+
+    class Meta:
+        verbose_name = 'Корзина'
+        verbose_name_plural = 'Корзина'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'catalog'],
+                name='unique_shopping_cart'
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.user.first_name} - {self.catalog.name}'
