@@ -71,6 +71,55 @@ class UserSerializer(serializers.ModelSerializer):
             'collected_private',
             'collected_major',
             'winner',
+            'address',
             'social_network',
             'avg_price'
             )
+        )
+
+
+class CustomUserCreateSerializer(UserCreateSerializer):
+    class Meta:
+        model = User
+        fields = tuple(User.REQUIRED_FIELDS) + (
+            User.USERNAME_FIELD,
+            'password',
+        )
+
+    def validate(self, obj):
+        invalid_usernames = ['me', 'set_password',
+                             'subscriptions', 'subscribe']
+        if self.initial_data.get('username') in invalid_usernames:
+            raise serializers.ValidationError(
+                {'username': 'Вы не можете использовать этот username.'}
+            )
+        return obj
+
+
+class SetPasswordSerializer(serializers.Serializer):
+    """[POST] Изменение пароля пользователя."""
+    current_password = serializers.CharField()
+    new_password = serializers.CharField()
+
+    def validate(self, obj):
+        try:
+            validate_password(obj['new_password'])
+        except django_exceptions.ValidationError as e:
+            raise serializers.ValidationError(
+                {'new_password': list(e.messages)}
+            )
+        return super().validate(obj)
+
+    def update(self, instance, validated_data):
+        if not instance.check_password(validated_data['current_password']):
+            raise serializers.ValidationError(
+                {'current_password': 'Неправильный пароль.'}
+            )
+        if (validated_data['current_password']
+           == validated_data['new_password']):
+            raise serializers.ValidationError(
+                {'new_password': 'Новый пароль должен отличаться от текущего.'}
+            )
+        instance.set_password(validated_data['new_password'])
+        instance.save()
+        return validated_data
