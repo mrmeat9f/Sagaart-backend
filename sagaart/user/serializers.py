@@ -1,27 +1,61 @@
-from django.contrib.auth.password_validation import validate_password
-from django.core import exceptions as django_exceptions
-from djoser.serializers import UserCreateSerializer
 from rest_framework import serializers
-from rest_framework.fields import SerializerMethodField
+from rest_framework.validators import UniqueValidator
 
-from .models import User
+from .models import (SocialNets, Education, Subscribe,
+                     ShoppingList, User, Catalog)
 
 
-class CustomUserSerializer(serializers.ModelSerializer):
+class SocialNetsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SocialNets
+        fields = ['id', 'name_nets', 'account']
+
+
+class EducationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Education
+        fields = ['id', 'ed_type', 'ed_level', 'ed_name_institute']
+
+
+class SubscribeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subscribe
+        fields = ['id']
+
+
+class ShoppingListSerializer(serializers.ModelSerializer):
+    product = serializers.PrimaryKeyRelatedField(
+        queryset=Catalog.objects.all())
 
     class Meta:
+        model = ShoppingList
+        fields = ['id', 'product']
+
+
+class UserSerializer(serializers.ModelSerializer):
+    social_nets = SocialNetsSerializer(many=True, read_only=True)
+    education = EducationSerializer(many=True, read_only=True)
+    nick_name = serializers.RegexField(
+        regex=r'^[\w.@+-]+\Z',
+        required=True,
+        max_length=150,
+        validators=[UniqueValidator(queryset=User.objects.all())]
+    )
+    email = serializers.EmailField(
+        required=True,
+        max_length=254,
+        validators=[UniqueValidator(queryset=User.objects.all())]
+    )
+
+    class Meta:
+        model = User
         fields = (
-            'id',
-            'username',
+            'email',
             'first_name',
             'last_name',
             'middle_name',
-            'email',
             'nick_name',
-            'phone',
-            'icon',
-            'gender',
-            'biography',
+            'biograthy',
             'year_of_birth',
             'place_of_birth',
             'residence_city',
@@ -38,6 +72,9 @@ class CustomUserSerializer(serializers.ModelSerializer):
             'collected_major',
             'winner',
             'address',
+            'social_network',
+            'avg_price'
+            )
         )
 
 
